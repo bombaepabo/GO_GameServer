@@ -1,28 +1,34 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"math"
 	"math/rand"
 
+	"github.com/bombaepabo/gameserver/types"
 	"github.com/gorilla/websocket"
 )
 
 const wsServerEndpoint = "ws://localhost:40000/ws"
-type Login struct{
-	ClientID int
-	Username string 
-}
 type GameClient struct{
 	conn *websocket.Conn
 	clientID int 
 	username string
 }
 func (c *GameClient) login() error {
-	return c.conn.WriteJSON(Login{
+	b,err := json.Marshal(types.Login{
 		ClientID:c.clientID,
 		Username:c.username,
 	})
+	if err != nil {
+		return err
+	}
+	msg := types.WSMessage{
+		Type:"Login",
+		Data:b,
+	}
+	return c.conn.WriteJSON(msg)
 }
 func newGameClient(conn *websocket.Conn,username string ) *GameClient {
 	return &GameClient {
